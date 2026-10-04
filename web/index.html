@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#173b3f" />
+  <meta name="description" content="NusantaraEdu-NER membantu mengenali unsur budaya Indonesia dari teks dan mengubahnya menjadi pembelajaran interaktif." />
+  <title>NusantaraEdu-NER — Jelajah Budaya dengan AI</title>
+  <style>
+    :root {
+      --bg: #f7f2e9;
+      --surface: #fffdf8;
+      --surface-2: #f1eadf;
+      --ink: #17343a;
+      --muted: #657377;
+      --line: #ddd4c8;
+      --brand: #176a68;
+      --brand-dark: #0f4d4d;
+      --accent: #c86b45;
+      --gold: #d7a83d;
+      --success: #2d7a57;
+      --danger: #ad3f3f;
+      --shadow: 0 20px 50px rgba(44, 50, 45, .09);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(215,168,61,.18), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(23,106,104,.14), transparent 28%),
+        var(--bg);
+      line-height: 1.6;
+    }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(247,242,233,.88);
+      border-bottom: 1px solid rgba(221,212,200,.8);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; min-height: 68px; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      border-radius: 13px; color: white; background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      box-shadow: 0 8px 20px rgba(23,106,104,.25);
+    }
+    .status-pill { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #aaa; box-shadow: 0 0 0 4px rgba(120,120,120,.1); }
+    .status-dot.ok { background: #2ca36a; box-shadow: 0 0 0 4px rgba(44,163,106,.13); }
+    .status-dot.bad { background: #c55; box-shadow: 0 0 0 4px rgba(204,85,85,.12); }
+
+    .hero { padding: 74px 0 38px; }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 46px; align-items: center; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border-radius: 999px;
+      background: rgba(23,106,104,.1); color: var(--brand-dark); font-weight: 750; font-size: .82rem;
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    h1 { font-size: clamp(2.55rem, 6vw, 5.2rem); line-height: .98; margin: 18px 0 22px; letter-spacing: -.055em; max-width: 850px; }
+    .hero p { color: var(--muted); font-size: 1.08rem; max-width: 690px; margin: 0 0 26px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .mini-note { margin-top: 16px; color: var(--muted); font-size: .88rem; }
+    .hero-art {
+      min-height: 340px; position: relative; overflow: hidden; border-radius: 34px; padding: 28px;
+      background: linear-gradient(145deg, #174f52, #17343a 60%, #482f28);
+      box-shadow: var(--shadow); color: #fff;
+    }
+    .hero-art::before, .hero-art::after {
+      content: ""; position: absolute; border: 1px solid rgba(255,255,255,.15); transform: rotate(45deg); border-radius: 24px;
+    }
+    .hero-art::before { width: 250px; height: 250px; right: -70px; top: -80px; }
+    .hero-art::after { width: 170px; height: 170px; left: -55px; bottom: -65px; }
+    .art-title { position: relative; z-index: 1; font-size: 1.3rem; font-weight: 750; margin-bottom: 20px; }
+    .culture-cloud { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+    .culture-cloud span { padding: 9px 12px; border-radius: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); font-size: .92rem; }
+    .culture-cloud span:nth-child(3n+1) { transform: translateY(6px); }
+    .art-foot { position: absolute; z-index: 1; left: 28px; right: 28px; bottom: 25px; display: flex; justify-content: space-between; align-items: end; color: rgba(255,255,255,.72); font-size: .82rem; }
+    .art-number { font-size: 2.2rem; color: white; font-weight: 800; line-height: 1; }
+
+    .workspace { padding: 26px 0 70px; }
+    .panel { background: rgba(255,253,248,.96); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .input-panel { padding: 28px; }
+    .section-head { display: flex; justify-content: space-between; gap: 18px; align-items: end; margin-bottom: 18px; }
+    .section-head h2 { margin: 0; font-size: 1.55rem; letter-spacing: -.025em; }
+    .section-head p { margin: 4px 0 0; color: var(--muted); font-size: .94rem; }
+    .counter { color: var(--muted); font-size: .83rem; white-space: nowrap; }
+    textarea {
+      width: 100%; min-height: 185px; resize: vertical; border: 1px solid var(--line); border-radius: 17px;
+      padding: 18px; background: #fff; color: var(--ink); outline: none; transition: .18s border-color, .18s box-shadow;
+    }
+    textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(23,106,104,.1); }
+    .samples { margin: 14px 0 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .samples-label { font-size: .84rem; color: var(--muted); margin-right: 2px; }
+    .sample-btn { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 8px 11px; font-size: .84rem; }
+    .sample-btn:hover { border-color: var(--brand); background: #e7f0ec; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { border: 0; border-radius: 13px; padding: 12px 17px; font-weight: 750; transition: .18s transform, .18s opacity, .18s box-shadow; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--brand); color: white; box-shadow: 0 8px 18px rgba(23,106,104,.22); }
+    .btn-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+    .btn-ghost { background: transparent; color: var(--brand-dark); border: 1px solid rgba(23,106,104,.22); }
+
+    .message { display: none; margin-top: 16px; border-radius: 13px; padding: 12px 14px; font-size: .92rem; }
+    .message.show { display: block; }
+    .message.error { background: #fff0ee; color: #853a34; border: 1px solid #efc7c1; }
+    .message.info { background: #eff7f4; color: #285f50; border: 1px solid #cbe4da; }
+
+    .results { margin-top: 22px; display: none; }
+    .results.show { display: block; }
+    .results-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
+    .result-card { padding: 24px; }
+    .result-card h3 { margin: 0 0 5px; font-size: 1.12rem; }
+    .result-card .sub { color: var(--muted); font-size: .88rem; margin-bottom: 18px; }
+    .highlight-box { padding: 18px; border-radius: 16px; background: #fbf8f1; border: 1px solid var(--line); line-height: 2.05; min-height: 100px; }
+    mark.entity { border-radius: 7px; padding: 3px 5px; background: #dcefea; color: #143b3c; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    mark.entity::after { content: attr(data-label); font-size: .63rem; font-weight: 800; margin-left: 5px; color: #346462; vertical-align: 2px; letter-spacing: .02em; }
+    .entity-list { display: grid; gap: 10px; }
+    .entity-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 13px; align-items: center; }
+    .entity-name { font-weight: 750; overflow-wrap: anywhere; }
+    .label-chip { border-radius: 999px; padding: 5px 9px; background: #e3efec; color: #245c59; font-size: .72rem; font-weight: 800; letter-spacing: .02em; }
+    .empty-state { color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; padding: 20px; text-align: center; }
+    .result-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+    .quiz-panel { margin-top: 20px; padding: 24px; }
+    .quiz-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+    .quiz-item { padding: 16px; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+    .quiz-item strong { display: block; margin-bottom: 10px; }
+    .answer { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #eff7f4; color: #285f50; }
+    .answer.show { display: block; }
+
+    .learn { padding: 12px 0 80px; }
+    .learn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .learn-card { padding: 22px; }
+    .step { width: 34px; height: 34px; border-radius: 10px; background: #e2eee9; display: grid; place-items: center; color: var(--brand-dark); font-weight: 850; margin-bottom: 14px; }
+    .learn-card h3 { margin: 0 0 7px; }
+    .learn-card p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+    .about { padding: 0 0 80px; }
+    .about-panel { padding: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .metric { padding: 15px; border-radius: 15px; background: var(--surface-2); }
+    .metric b { display: block; font-size: 1.45rem; line-height: 1.2; }
+    .metric span { font-size: .78rem; color: var(--muted); }
+    .labels-wrap { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .labels-wrap span { font-size: .74rem; padding: 5px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: white; }
+    .model-note { color: var(--muted); font-size: .86rem; margin-top: 12px; }
+
+    footer { padding: 26px 0 42px; color: var(--muted); border-top: 1px solid var(--line); font-size: .88rem; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -3px; margin-right: 7px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+    @media (max-width: 860px) {
+      .hero { padding-top: 46px; }
+      .hero-grid, .results-grid, .about-panel { grid-template-columns: 1fr; }
+      .hero-art { min-height: 280px; }
+      .learn-grid { grid-template-columns: 1fr; }
+      .quiz-list { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1160px); }
+      .nav { min-height: 60px; }
+      .brand-text { display: none; }
+      .hero { padding-top: 34px; }
+      h1 { font-size: 2.55rem; }
+      .input-panel, .result-card, .quiz-panel, .about-panel { padding: 18px; }
+      .section-head { align-items: start; flex-direction: column; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell nav">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">N</div>
+        <div class="brand-text">NusantaraEdu-NER</div>
+      </div>
+      <div class="status-pill" aria-live="polite">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">Memeriksa model…</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <span class="eyebrow">AI × Budaya Indonesia</span>
+          <h1>Jelajahi budaya Nusantara lewat teks.</h1>
+          <p>
+            Masukkan paragraf Bahasa Indonesia. NusantaraEdu-NER akan menandai unsur budaya seperti
+            tarian, suku, rumah adat, alat musik, makanan, bahasa, daerah, dan cagar budaya — lalu
+            mengubahnya menjadi bahan belajar interaktif.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" onclick="document.getElementById('textInput').focus(); document.getElementById('workspace').scrollIntoView({behavior:'smooth'});">Mulai jelajah</button>
+            <button class="btn btn-secondary" type="button" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'});">Tentang model</button>
+          </div>
+          <div class="mini-note">Dirancang untuk pembelajaran dan eksplorasi budaya. Hasil AI tetap perlu dibaca secara kritis.</div>
+        </div>
+        <div class="hero-art" aria-label="Contoh kategori budaya yang dapat dikenali">
+          <div class="art-title">Dari teks menjadi pengetahuan</div>
+          <div class="culture-cloud">
+            <span>Tari Saman · TARIAN</span>
+            <span>Gayo · SUKU</span>
+            <span>Aceh · PROVINSI</span>
+            <span>Rumah Gadang · RUMAH ADAT</span>
+            <span>Angklung · ALAT MUSIK</span>
+            <span>Batik · KARYA BUDAYA</span>
+            <span>Rendang · MAKANAN</span>
+            <span>Borobudur · CAGAR BUDAYA</span>
+          </div>
+          <div class="art-foot">
+            <span>Named Entity Recognition<br/>Bahasa Indonesia</span>
+            <span class="art-number" id="heroLabelCount">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="workspace" class="workspace">
+      <div class="shell">
+        <div class="panel input-panel">
+          <div class="section-head">
+            <div>
+              <h2>Coba teks budaya</h2>
+              <p>Tulis satu atau beberapa kalimat. Sistem akan menandai entitas budaya yang dikenali.</p>
+            </div>
+            <div id="counter" class="counter">0 / 5000</div>
+          </div>
+
+          <textarea id="textInput" maxlength="5000" placeholder="Contoh: Tari Saman berkembang dalam masyarakat Gayo di Aceh."></textarea>
+
+          <div class="samples">
+            <span class="samples-label">Contoh cepat:</span>
+            <button class="sample-btn" data-sample="Tari Saman berkembang dalam masyarakat Gayo di Aceh.">Tari Saman</button>
+            <button class="sample-btn" data-sample="Rumah Gadang merupakan rumah adat masyarakat Minangkabau dari Sumatera Barat.">Rumah Gadang</button>
+            <button class="sample-btn" data-sample="Angklung merupakan alat musik tradisional yang berkembang di Jawa Barat.">Angklung</button>
+            <button class="sample-btn" data-sample="Batik merupakan salah satu karya budaya Indonesia yang dikenal luas.">Batik</button>
+          </div>
+
+          <div class="actions">
+            <button id="analyzeBtn" class="btn btn-primary" type="button">Kenali unsur budaya</button>
+            <button id="clearBtn" class="btn btn-secondary" type="button">Hapus</button>
+          </div>
+          <div id="message" class="message" role="status" aria-live="polite"></div>
+        </div>
+
+        <div id="results" class="results">
+          <div class="results-grid">
+            <div class="panel result-card">
+              <h3>Teks yang sudah ditandai</h3>
+              <div class="sub">Sorotan menunjukkan bagian teks yang dikenali model.</div>
+              <div id="highlightBox" class="highlight-box"></div>
+              <div class="result-tools">
+                <button id="copyBtn" class="btn btn-ghost" type="button">Salin ringkasan</button>
+                <button id="newQuizBtn" class="btn btn-ghost" type="button">Buka kuis</button>
+              </div>
+            </div>
+            <div class="panel result-card">
+              <h3>Unsur budaya ditemukan</h3>
+              <div id="entitySub" class="sub">—</div>
+              <div id="entityList" class="entity-list"></div>
+            </div>
+          </div>
+
+          <div id="quizPanel" class="panel quiz-panel">
+            <div class="section-head">
+              <div>
+                <h2>Kuis dari teks</h2>
+                <p>Pertanyaan dibuat langsung dari entitas yang berhasil dikenali.</p>
+              </div>
+            </div>
+            <div id="quizList" class="quiz-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="learn">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2>Cara menggunakan</h2>
+            <p>Tiga langkah sederhana untuk belajar dari teks budaya.</p>
+          </div>
+        </div>
+        <div class="learn-grid">
+          <div class="panel learn-card"><div class="step">1</div><h3>Masukkan teks</h3><p>Gunakan paragraf dari materi belajar, catatan, atau teks budaya yang ingin dipahami.</p></div>
+          <div class="panel learn-card"><div class="step">2</div><h3>Lihat penandaan AI</h3><p>Model mencari nama budaya, wilayah, suku, bahasa, tarian, dan kategori lain yang pernah dipelajari.</p></div>
+          <div class="panel learn-card"><div class="step">3</div><h3>Uji pemahaman</h3><p>Gunakan kuis otomatis sebagai latihan cepat. Periksa kembali jawaban dengan sumber belajar yang tepercaya.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="about">
+      <div class="shell">
+        <div class="panel about-panel">
+          <div>
+            <span class="eyebrow">Transparansi model</span>
+            <h2 style="margin:14px 0 8px;">Apa yang ada di balik aplikasi?</h2>
+            <p style="color:var(--muted); margin-top:0;">
+              NusantaraEdu-NER menggunakan model Named Entity Recognition (NER) berbasis spaCy yang dilatih pada anotasi entitas budaya Indonesia. Aplikasi tidak menebak fakta baru; ia menandai bagian teks berdasarkan pola yang dipelajari model.
+            </p>
+            <div id="labelsWrap" class="labels-wrap"></div>
+            <div class="model-note">Metrik test set membantu menilai model secara agregat, tetapi tidak menjamin setiap prediksi selalu benar.</div>
+          </div>
+          <div>
+            <h3 style="margin-top:0;">Ringkasan evaluasi</h3>
+            <div class="metric-grid">
+              <div class="metric"><b id="f1Metric">—</b><span>Entity F1</span></div>
+              <div class="metric"><b id="precisionMetric">—</b><span>Precision</span></div>
+              <div class="metric"><b id="testCountMetric">—</b><span>Contoh uji</span></div>
+            </div>
+            <div class="model-note" id="modelHash">Model: memuat informasi…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-inner">
+      <span>© NusantaraEdu-NER · AI untuk pembelajaran budaya Indonesia</span>
+      <span>Gunakan sebagai pendamping belajar, bukan satu-satunya sumber kebenaran.</span>
+    </div>
+  </footer>
+
+  <script>
+    const textInput = document.getElementById('textInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const counter = document.getElementById('counter');
+    const message = document.getElementById('message');
+    const results = document.getElementById('results');
+    const highlightBox = document.getElementById('highlightBox');
+    const entityList = document.getElementById('entityList');
+    const entitySub = document.getElementById('entitySub');
+    const quizList = document.getElementById('quizList');
+    const copyBtn = document.getElementById('copyBtn');
+    const newQuizBtn = document.getElementById('newQuizBtn');
+    let latestPrediction = null;
+
+    const labelNames = {
+      SUKU: 'Suku', PROVINSI: 'Provinsi', DAERAH: 'Daerah', TARIAN: 'Tarian',
+      RUMAH_ADAT: 'Rumah adat', PAKAIAN_ADAT: 'Pakaian adat', MAKANAN: 'Makanan',
+      ALAT_MUSIK: 'Alat musik', BAHASA: 'Bahasa', UPACARA: 'Upacara / tradisi',
+      TOKOH: 'Tokoh', CAGAR_BUDAYA: 'Cagar budaya', KARYA_BUDAYA: 'Karya budaya',
+      PERMAINAN_ADAT: 'Permainan adat', ORGANISASI_BUDAYA: 'Organisasi budaya'
+    };
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    }
+    function showMessage(text, type='info') {
+      message.textContent = text;
+      message.className = `message show ${type}`;
+    }
+    function hideMessage() { message.className = 'message'; message.textContent = ''; }
+    function setLoading(loading) {
+      analyzeBtn.disabled = loading;
+      analyzeBtn.innerHTML = loading ? '<span class="spinner"></span>Menganalisis…' : 'Kenali unsur budaya';
+    }
+    function updateCounter() { counter.textContent = `${textInput.value.length} / 5000`; }
+
+    function renderHighlights(text, entities) {
+      const sorted = [...entities].sort((a,b) => a.start - b.start || a.end - b.end);
+      let cursor = 0;
+      let html = '';
+      for (const ent of sorted) {
+        if (ent.start < cursor) continue;
+        html += escapeHtml(text.slice(cursor, ent.start));
+        html += `<mark class="entity" data-label="${escapeHtml(labelNames[ent.label] || ent.label)}">${escapeHtml(text.slice(ent.start, ent.end))}</mark>`;
+        cursor = ent.end;
+      }
+      html += escapeHtml(text.slice(cursor));
+      highlightBox.innerHTML = html || '<span style="color:var(--muted)">Tidak ada teks.</span>';
+    }
+
+    function renderEntities(entities) {
+      entityList.innerHTML = '';
+      entitySub.textContent = `${entities.length} entitas dikenali`;
+      if (!entities.length) {
+        entityList.innerHTML = '<div class="empty-state">Belum ada unsur budaya yang dikenali. Coba contoh lain atau gunakan teks yang lebih eksplisit.</div>';
+        return;
+      }
+      entities.forEach(ent => {
+        const row = document.createElement('div');
+        row.className = 'entity-row';
+        row.innerHTML = `<span class="entity-name">${escapeHtml(ent.text)}</span><span class="label-chip">${escapeHtml(labelNames[ent.label] || ent.label)}</span>`;
+        entityList.appendChild(row);
+      });
+    }
+
+    function renderQuiz(questions) {
+      quizList.innerHTML = '';
+      if (!questions.length) {
+        quizList.innerHTML = '<div class="empty-state">Kuis belum dapat dibuat karena belum ada entitas yang dikenali.</div>';
+        return;
+      }
+      questions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-item';
+        card.innerHTML = `
+          <span class="label-chip">${escapeHtml(labelNames[q.label] || q.label)}</span>
+          <strong>${idx + 1}. ${escapeHtml(q.prompt)}</strong>
+          <button class="btn btn-secondary" type="button">Lihat jawaban</button>
+          <div class="answer">${escapeHtml(q.answer)}</div>`;
+        const btn = card.querySelector('button');
+        const answer = card.querySelector('.answer');
+        btn.addEventListener('click', () => {
+          answer.classList.toggle('show');
+          btn.textContent = answer.classList.contains('show') ? 'Sembunyikan jawaban' : 'Lihat jawaban';
+        });
+        quizList.appendChild(card);
+      });
+    }
+
+    async function analyze() {
+      const text = textInput.value.trim();
+      hideMessage();
+      if (text.length < 2) {
+        showMessage('Masukkan teks terlebih dahulu.', 'error');
+        textInput.focus();
+        return;
+      }
+      setLoading(true);
+      try {
+        const [predRes, quizRes] = await Promise.all([
+          fetch('/api/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text})}),
+          fetch('/api/quiz', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text})})
+        ]);
+        if (!predRes.ok) throw new Error((await predRes.json()).detail || 'Prediksi gagal.');
+        if (!quizRes.ok) throw new Error((await quizRes.json()).detail || 'Kuis gagal dibuat.');
+        const prediction = await predRes.json();
+        const quiz = await quizRes.json();
+        latestPrediction = prediction;
+        renderHighlights(prediction.text, prediction.entities);
+        renderEntities(prediction.entities);
+        renderQuiz(quiz.questions);
+        results.classList.add('show');
+        results.scrollIntoView({behavior:'smooth', block:'start'});
+      } catch (err) {
+        showMessage(`Aplikasi belum dapat memproses teks: ${err.message}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    analyzeBtn.addEventListener('click', analyze);
+    textInput.addEventListener('input', updateCounter);
+    textInput.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+    });
+    clearBtn.addEventListener('click', () => {
+      textInput.value = ''; latestPrediction = null; results.classList.remove('show'); hideMessage(); updateCounter(); textInput.focus();
+    });
+    document.querySelectorAll('.sample-btn').forEach(btn => btn.addEventListener('click', () => {
+      textInput.value = btn.dataset.sample; updateCounter(); textInput.focus();
+    }));
+    newQuizBtn.addEventListener('click', () => document.getElementById('quizPanel').scrollIntoView({behavior:'smooth'}));
+    copyBtn.addEventListener('click', async () => {
+      if (!latestPrediction) return;
+      const lines = latestPrediction.entities.map(e => `- ${e.text} — ${labelNames[e.label] || e.label}`);
+      const summary = `NusantaraEdu-NER\n\n${latestPrediction.text}\n\nEntitas:\n${lines.join('\n') || '- Tidak ada entitas'}`;
+      try { await navigator.clipboard.writeText(summary); showMessage('Ringkasan berhasil disalin.', 'info'); }
+      catch { showMessage('Browser tidak mengizinkan penyalinan otomatis.', 'error'); }
+    });
+
+    async function loadStatus() {
+      try {
+        const [healthRes, infoRes] = await Promise.all([fetch('/api/health'), fetch('/api/model-info')]);
+        const health = healthRes.ok ? await healthRes.json() : null;
+        const info = infoRes.ok ? await infoRes.json() : null;
+        const dot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        if (health && health.status === 'ok') {
+          dot.className = 'status-dot ok'; statusText.textContent = 'Model siap digunakan';
+          document.getElementById('heroLabelCount').textContent = `${health.label_count || '—'} kategori`;
+        } else {
+          dot.className = 'status-dot bad'; statusText.textContent = 'Model belum siap';
+        }
+        if (info && info.status === 'ok') {
+          const metrics = info.test_metrics || {};
+          document.getElementById('f1Metric').textContent = metrics.f1 != null ? `${(metrics.f1 * 100).toFixed(1)}%` : '—';
+          document.getElementById('precisionMetric').textContent = metrics.precision != null ? `${(metrics.precision * 100).toFixed(1)}%` : '—';
+          document.getElementById('testCountMetric').textContent = info.test_examples ?? '—';
+          const labels = (info.labels && info.labels.ner) || [];
+          document.getElementById('labelsWrap').innerHTML = labels.map(x => `<span>${escapeHtml(labelNames[x] || x)}</span>`).join('');
+          document.getElementById('modelHash').textContent = info.model_sha256 ? `Fingerprint model: ${info.model_sha256.slice(0, 12)}…` : 'Fingerprint model tidak tersedia.';
+        }
+      } catch {
+        document.getElementById('statusDot').className = 'status-dot bad';
+        document.getElementById('statusText').textContent = 'Status tidak tersedia';
+      }
+    }
+
+    updateCounter();
+    loadStatus();
+  </script>
+</body>
+</html>
